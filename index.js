@@ -150,7 +150,7 @@ const private_route_table=config.require("private_route_table")
 const public_subnet=config.require("public_subnet")
 const private_subnet = config.require("private_subnet")
 
-const vpc = new aws.ec2.Vpc("my-vpc", {
+const vpc = new aws.ec2.Vpc(vpc_name, {
     cidrBlock: cidrblock, 
     tags: {
         Name: vpc_name,
@@ -168,7 +168,7 @@ availableZones.then(azs => {
         const az = azs.names[i];
         const publicSubnetCIDR = `${cidrblock.split(".")[0]}.${cidrblock.split(".")[1]}.${i}.0/24`;
         const privateSubnetCIDR = `${cidrblock.split(".")[0]}.${cidrblock.split(".")[1]}.${i + 3}.0/24`;
-        const publicSubnet = new aws.ec2.Subnet(`public-subnet-${i + 1}`, {
+        const publicSubnet = new aws.ec2.Subnet(`${public_subnet}-${i + 1}`, {
             vpcId: vpc.id,
             cidrBlock: publicSubnetCIDR,
             availabilityZone: az,
@@ -178,7 +178,7 @@ availableZones.then(azs => {
             },
         });
 
-        const privateSubnet = new aws.ec2.Subnet(`private-subnet-${i + 1}`, {
+        const privateSubnet = new aws.ec2.Subnet(`${private_subnet}-${i + 1}`, {
             vpcId: vpc.id,
             cidrBlock: privateSubnetCIDR,
             availabilityZone: az,
@@ -191,14 +191,14 @@ availableZones.then(azs => {
         privateSubnetIds.push(privateSubnet.id);
     }
 
-    const internetGateway = new aws.ec2.InternetGateway("my-igw", {
+    const internetGateway = new aws.ec2.InternetGateway(ig_name, {
         vpcId: vpc.id,
         tags: {
             Name: ig_name,
         },
     });
 
-    const publicRouteTable = new aws.ec2.RouteTable("public-route-table", {
+    const publicRouteTable = new aws.ec2.RouteTable(public_route_table, {
         vpcId: vpc.id,
         routes: [{
             cidrBlock: "0.0.0.0/0",
@@ -209,7 +209,7 @@ availableZones.then(azs => {
         },
     });
 
-    const privateRouteTable = new aws.ec2.RouteTable("private-route-table", {
+    const privateRouteTable = new aws.ec2.RouteTable(private_route_table, {
         vpcId: vpc.id,
         tags: {
             Name: private_route_table,
