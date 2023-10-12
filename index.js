@@ -161,10 +161,12 @@ const publicSubnetIds = [];
 const privateSubnetIds = [];
 
 const availableZones = aws.getAvailabilityZones({ state: "available" });
-
+let created_count= 0;
 
 availableZones.then(azs => {
-    for (let i = 0; i < count; i++) {
+    created_count=Math.min(azs.names.length,count);
+    for (let i = 0; i < Math.min(count,azs.names.length); i++) {
+        console.log("@@@@@@@@@@@@@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",azs.names.length);
         const az = azs.names[i];
         const publicSubnetCIDR = `${cidrblock.split(".")[0]}.${cidrblock.split(".")[1]}.${i}.0/24`;
         const privateSubnetCIDR = `${cidrblock.split(".")[0]}.${cidrblock.split(".")[1]}.${i + 3}.0/24`;
@@ -216,7 +218,7 @@ availableZones.then(azs => {
         },
     });
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < created_count; i++) {
         new aws.ec2.RouteTableAssociation(`public-subnet-association-${i}`, {
             subnetId: publicSubnetIds[i],
             routeTableId: publicRouteTable.id,
