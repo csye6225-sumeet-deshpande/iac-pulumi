@@ -54,11 +54,8 @@ This repo contains code for Infra as a part of csye6225
     ```bash
     pulumi new aws-javascript
     ```
-
-3. **Write Infrastructure Code** :pencil:  
-   Write infrastructure code in TypeScript (or your preferred language) to create VPC, subnets, route tables, and other resources. Avoid hardcoding values.
-
-4. **Deploy Infrastructure** :rocket:
+  
+3. **Deploy Infrastructure** :rocket:
 
     ```bash
     pulumi up
