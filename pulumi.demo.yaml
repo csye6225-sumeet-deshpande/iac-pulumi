@@ -1,0 +1,11 @@
+config:
+  aws:profile: demo
+  aws:region: "us-east-1"
+  cidr: 10.0.0.0/16
+  total_count: 3
+  vpc_name: "my-vpc"
+  ig_name: "Internet Gateway"
+  public_route_table: "Public Route Table"
+  private_route_table: "Private Route Table"
+  private_subnet: "private-subnet"
+  public_subnet: "public-subnet"
