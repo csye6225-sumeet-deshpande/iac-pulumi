@@ -102,6 +102,9 @@ availableZones.then(azs => {
     
 const ApplicationSecurityGroup = new aws.ec2.SecurityGroup("ApplicationSecurityGroup", {
     vpcId: vpc.id,  
+    tags: {
+        Name: "Secuirty Group Pulumi",
+    },
     ingress: [
         {
             protocol: "tcp",
@@ -142,7 +145,10 @@ const webAppInstance = new aws.ec2.Instance("webAppInstance", {
         volumeType: volumeType, 
         deleteOnTermination:true,
     },
-    disableApiTermination:true,
+    disableApiTermination:false,
+    tags: {
+        Name: "EC2 Web APP",
+    },
 });
 
 
