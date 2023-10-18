@@ -2,6 +2,7 @@ config:
   aws:profile: demo
   aws:region: "us-east-1"
   cidr: 10.0.0.0/16
+  subnetMask: 24
   total_count: 3
   vpc_name: "my-vpc"
   ig_name: "Internet Gateway"
