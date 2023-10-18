@@ -16,6 +16,7 @@ const instanceType=config.require("instanceType")
 const ami =config.require("ami")
 const volumeSize=config.require("volumeSize")
 const volumeType=config.require("volumeType")
+const ingressRules = new pulumi.Config().getObject("ingressRules");
 
 
 const vpc = new aws.ec2.Vpc(vpc_name, {
@@ -105,32 +106,7 @@ const ApplicationSecurityGroup = new aws.ec2.SecurityGroup("ApplicationSecurityG
     tags: {
         Name: "Secuirty Group Pulumi",
     },
-    ingress: [
-        {
-            protocol: "tcp",
-            fromPort: 80,
-            toPort: 80,
-            cidrBlocks: ["0.0.0.0/0"], 
-        },
-        {
-            protocol: "tcp",
-            fromPort: 443,
-            toPort: 443,
-            cidrBlocks: ["0.0.0.0/0"], 
-        },
-        {
-            protocol: "tcp",
-            fromPort: 22,
-            toPort: 22,
-            cidrBlocks: ["0.0.0.0/0"], 
-        },
-        {
-            protocol: "tcp",
-            fromPort: 9090,
-            toPort: 9090,
-            cidrBlocks: ["0.0.0.0/0"], 
-        },
-    ],
+    ingress: ingressRules,
 });
 
 

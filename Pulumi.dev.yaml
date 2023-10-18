@@ -14,3 +14,24 @@ config:
   ami: "ami-03161077d4e58a755"
   volumeSize: 25
   volumeType: "gp2"
+    ingressRules:
+    - protocol: "tcp"
+      fromPort: 22
+      toPort: 22
+      cidrBlocks:
+        - "0.0.0.0/0"
+    - protocol: "tcp"
+      fromPort: 80
+      toPort: 80
+      cidrBlocks:
+        - "0.0.0.0/0"
+    - protocol: "tcp"
+      fromPort: 443
+      toPort: 443
+      cidrBlocks:
+        - "0.0.0.0/0"
+    - protocol: "tcp"
+      fromPort: 9090
+      toPort: 9090
+      cidrBlocks:
+        - "0.0.0.0/0"
