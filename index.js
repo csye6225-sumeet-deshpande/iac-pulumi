@@ -16,11 +16,12 @@ const instanceType=config.require("instanceType")
 const ami =config.require("ami")
 const volumeSize=config.require("volumeSize")
 const volumeType=config.require("volumeType")
-const ingressRules = new pulumi.Config().getObject("ingressRules");
+const ingressRules = new pulumi.Config().getObject("ingressRules")
+const subnetMask = new pulumi.Config().getObject("subnetMask");
 
 
 const vpc = new aws.ec2.Vpc(vpc_name, {
-    cidrBlock: cidrblock, 
+    cidrBlock: `${cidrblock}`, 
     tags: {
         Name: vpc_name,
     },
@@ -37,8 +38,8 @@ availableZones.then(azs => {
     for (let i = 0; i < Math.min(count,azs.names.length); i++) {
         console.log("@@@@@@@@@@@@@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",azs.names.length);
         const az = azs.names[i];
-        const publicSubnetCIDR = `${cidrblock.split(".")[0]}.${cidrblock.split(".")[1]}.${i}.0/24`;
-        const privateSubnetCIDR = `${cidrblock.split(".")[0]}.${cidrblock.split(".")[1]}.${i + 3}.0/24`;
+        const publicSubnetCIDR = `${cidrblock.split(".")[0]}.${cidrblock.split(".")[1]}.${i}.0/${subnetMask}`;
+        const privateSubnetCIDR = `${cidrblock.split(".")[0]}.${cidrblock.split(".")[1]}.${i + 3}.0/${subnetMask}`;
         const publicSubnet = new aws.ec2.Subnet(`${public_subnet}-${i + 1}`, {
             vpcId: vpc.id,
             cidrBlock: publicSubnetCIDR,
