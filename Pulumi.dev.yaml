@@ -12,7 +12,7 @@ config:
   public_subnet: "public-subnet"
   keyName: "sumeet"
   instanceType: "t2.micro"
-  ami: "ami-03626b14e040604cd"
+  ami: "ami-037e4a92e8a5f7e5d"
   volumeSize: 25
   volumeType: "gp2"
   ingressRules:
