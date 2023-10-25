@@ -1,5 +1,6 @@
 const pulumi = require("@pulumi/pulumi");
 const aws = require("@pulumi/aws");
+const { rds } = require("@pulumi/aws/types/enums");
 const config = new pulumi.Config();
 
 
@@ -18,6 +19,9 @@ const volumeSize=config.require("volumeSize")
 const volumeType=config.require("volumeType")
 const ingressRules = new pulumi.Config().getObject("ingressRules")
 const subnetMask = new pulumi.Config().getObject("subnetMask");
+
+
+
 
 
 const vpc = new aws.ec2.Vpc(vpc_name, {
@@ -108,7 +112,110 @@ const ApplicationSecurityGroup = new aws.ec2.SecurityGroup("ApplicationSecurityG
         Name: "Secuirty Group Pulumi",
     },
     ingress: ingressRules,
+    egress: [
+        {
+            protocol: "-1",
+            fromPort: 0,
+            toPort: 0,
+            cidrBlocks: ["0.0.0.0/0"]
+        }
+    ],
 });
+
+
+
+
+
+const databaseSecurityGroup = new aws.ec2.SecurityGroup("databasesecuritysroupname", {
+    description: "Database Security Group",
+    vpcId: vpc.id, 
+    ingress: [
+        {
+            protocol: "tcp",
+            fromPort: 5432,
+            toPort: 5432,
+            securityGroups: [ApplicationSecurityGroup.id], 
+
+        },
+      
+    ],
+    egress: [
+        {
+            protocol: "-1",
+            fromPort: 0,
+            toPort: 0,
+            cidrBlocks: ["0.0.0.0/0"]
+        }
+    ],
+  
+});
+
+const databaseParameterGroup= new aws.rds.ParameterGroup("databaseparametergroup",{
+        family: "postgres15"
+});
+
+const postgresqlSubnetGroup = new aws.rds.SubnetGroup("postgresql_subnet_group", {
+    name: "postgresubgroup",
+    vpcId: vpc.id,  
+    subnetIds: [
+        privateSubnetIds[0],
+        privateSubnetIds[1],
+    ],
+    tags: {
+        Name: "PostgreSQL subnet group",
+    },
+});
+
+const rdsDatabase = new aws.rds.Instance("rdsdatabase",{
+    engine:"postgres",
+    identifier:"csye6225",
+    vpcId:vpc.id,
+    allocatedStorage:20,
+    engineVersion:15,
+    publiclyAccessible:false,   
+    instanceClass: "db.t3.micro",
+    dbSubnetGroupName: postgresqlSubnetGroup.name,
+    parameterGroupName:databaseParameterGroup,
+    vpcSecurityGroupIds:[databaseSecurityGroup.id],
+    multiAz:false,
+    subnetId: privateSubnetIds[0],
+    skipFinalSnapshot:true,
+    name: "csye6225",
+    username: "csye6225", 
+    password: "Kothrud2021",
+})
+const username = "csye6225";
+const password = "Kothrud2021";
+console.log("RDS Endpoint:", rdsDatabase.address);
+
+// const userData = pulumi.all([username, password, rdsDatabase.address])
+// .apply(([username, password, address]) => 
+//     `#!/bin/bash
+//     sudo mkdir /home/admin/p2
+//     cd /home/admin/webapp
+//     rm .env
+//     touch .env
+//     echo PGPORT=5432 >> /home/admin/webapp/.env
+//     echo PGUSER=${username} >> /home/admin/webapp/.env
+//     echo PGPASSWORD=${password} >> /home/admin/webapp/.env
+//     echo PGDATABASE="${username}" >> /home/admin/webapp/.env
+//     echo CSVPATH="./users.csv" >> /home/admin/webapp/.env
+//     echo PGHOST=${address} >> /home/admin/webapp/.env
+//     echo "Hello, World!" > /home/admin/index.html`);
+
+const userData = `#!/bin/bash
+sudo mkdir /home/admin/p2
+cd /home/admin/webapp
+rm .env
+touch .env
+echo PGPORT=5432 >> /home/admin/webapp/.env
+echo PGUSER="csye6225" >> /home/admin/webapp/.env
+echo PGPASSWORD="Kothrud2021" >> /home/admin/webapp/.env
+echo PGDATABASE="csye6225" >> /home/admin/webapp/.env
+echo CSVPATH="/home/admin/webapp/users.csv" >> /home/admin/webapp/.env
+echo PGHOST=${rdsDatabase.endpoint} >> /home/admin/webapp/.env
+echo "Hello, World!" > /home/admin/index.html`;
+
 
 
 const webAppInstance = new aws.ec2.Instance("webAppInstance", {
@@ -123,8 +230,34 @@ const webAppInstance = new aws.ec2.Instance("webAppInstance", {
         deleteOnTermination:true,
     },
     disableApiTermination:false,
+    userDataReplaceOnChange:true,
+    userData:pulumi.interpolate`#!/bin/bash
+    sudo mkdir /home/admin/p2
+    cd /home/admin/webapp
+    rm .env
+    touch .env
+    echo PGPORT=5432 >> /home/admin/webapp/.env
+    echo PGUSER="csye6225" >> /home/admin/webapp/.env
+    echo PGPASSWORD="Kothrud2021" >> /home/admin/webapp/.env
+    echo PGDATABASE="csye6225" >> /home/admin/webapp/.env
+    echo CSVPATH="./users.csv" >> /home/admin/webapp/.env
+    echo PGHOST=${rdsDatabase.address} >> /home/admin/webapp/.env
+    echo "Hello, World!" > /home/admin/index.html`,
+    // userData:Buffer.from(`#!/bin/bash
+    // sudo mkdir /home/admin/p2
+    // cd /home/admin/webapp
+    // rm .env
+    // touch .env
+    // echo PGPORT=5432 >> /home/admin/webapp/.env
+    // echo PGUSER= "csye6225" >> /home/admin/webapp/.env
+    // echo PGPASSWORD="Kothrud2021" >> /home/admin/webapp/.env
+    // echo PGDATABASE="csye6225" >> /home/admin/webapp/.env
+    // echo CSVPATH="./users.csv" >> /home/admin/webapp/.env
+    // echo PGHOST=${rds} >> /home/admin/webapp/.env
+    // echo "Hello, World!" > /home/admin/index.html`).toString('base64'),
+    dependsOn: [rdsDatabase],
     tags: {
-        Name: "EC2 Web APP",
+        Name: "EC2 Web APP Pulumi",
     },
 });
 
