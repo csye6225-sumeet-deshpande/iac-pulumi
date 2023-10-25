@@ -19,6 +19,12 @@ const volumeSize=config.require("volumeSize")
 const volumeType=config.require("volumeType")
 const ingressRules = new pulumi.Config().getObject("ingressRules")
 const subnetMask = new pulumi.Config().getObject("subnetMask");
+const username = config.require('dbUsername');
+const password = config.require('dbPassword');
+const dbName=config.require('dbName');
+const rdsIdentifier=config.require('rdsIdentifier');
+const instanceClass=config.require('instanceClass');
+const userCSVPATH=config.require('userCSVPATH');
 
 
 
@@ -168,27 +174,22 @@ const postgresqlSubnetGroup = new aws.rds.SubnetGroup("postgresql_subnet_group",
 
 const rdsDatabase = new aws.rds.Instance("rdsdatabase",{
     engine:"postgres",
-    identifier:"csye6225",
+    identifier:rdsIdentifier,
     vpcId:vpc.id,
     allocatedStorage:20,
     engineVersion:15,
     publiclyAccessible:false,   
-    instanceClass: "db.t3.micro",
+    instanceClass: instanceClass,
     dbSubnetGroupName: postgresqlSubnetGroup.name,
     parameterGroupName:databaseParameterGroup,
     vpcSecurityGroupIds:[databaseSecurityGroup.id],
     multiAz:false,
     subnetId: privateSubnetIds[0],
     skipFinalSnapshot:true,
-    name: "csye6225",
-    username: "csye6225", 
-    password: "Kothrud2021",
+    name: dbName,
+    username: username, 
+    password: password,
 })
-const username = "csye6225";
-const password = "Kothrud2021";
-console.log("RDS Endpoint:", rdsDatabase.address);
-
-
 
 
 
@@ -211,24 +212,12 @@ const webAppInstance = new aws.ec2.Instance("webAppInstance", {
     sudo rm .env
     sudo touch .env
     echo PGPORT=5432 >> /opt/csye6225/.env
-    echo PGUSER="csye6225" >> /opt/csye6225/.env
-    echo PGPASSWORD="Kothrud2021" >> /opt/csye6225/.env
-    echo PGDATABASE="csye6225" >> /opt/csye6225/.env
-    echo CSVPATH="/opt/csye6225/users.csv" >> /opt/csye6225/.env
+    echo PGUSER=${username} >> /opt/csye6225/.env
+    echo PGPASSWORD=${password} >> /opt/csye6225/.env
+    echo PGDATABASE=${dbName} >> /opt/csye6225/.env
+    echo CSVPATH=${userCSVPATH} >> /opt/csye6225/.env
     echo PGHOST=${rdsDatabase.address} >> /opt/csye6225/.env
     sudo systemctl restart webapp`,
-    // userData:Buffer.from(`#!/bin/bash
-    // sudo mkdir /home/admin/p2
-    // cd /home/admin/webapp
-    // rm .env
-    // touch .env
-    // echo PGPORT=5432 >> /home/admin/webapp/.env
-    // echo PGUSER= "csye6225" >> /home/admin/webapp/.env
-    // echo PGPASSWORD="Kothrud2021" >> /home/admin/webapp/.env
-    // echo PGDATABASE="csye6225" >> /home/admin/webapp/.env
-    // echo CSVPATH="./users.csv" >> /home/admin/webapp/.env
-    // echo PGHOST=${rds} >> /home/admin/webapp/.env
-    // echo "Hello, World!" > /home/admin/index.html`).toString('base64'),
     dependsOn: [rdsDatabase],
     tags: {
         Name: "EC2 Web APP Pulumi",
