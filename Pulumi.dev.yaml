@@ -12,7 +12,7 @@ config:
   public_subnet: "public-subnet"
   keyName: "sumeet"
   instanceType: "t2.micro"
-  ami: "ami-09fb129567a765eea"
+  ami: "ami-023a56cf68c1c8f62"
   volumeSize: 25
   volumeType: "gp2"
   rdsIdentifier: "csye6225"

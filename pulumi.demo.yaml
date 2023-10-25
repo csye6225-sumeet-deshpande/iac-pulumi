@@ -12,9 +12,15 @@ config:
   public_subnet: "public-subnet"
   keyName: "sumeet"
   instanceType: "t2.micro"
-  ami: "ami-0daaf14646ad92efc"
+  ami: "ami-06ae66a4a216fe8a8"
   volumeSize: 25
   volumeType: "gp2"
+  rdsIdentifier: "csye6225"
+  instanceClass: "db.t3.micro"
+  dbName: "csye6225"
+  dbUsername: "csye6225"
+  dbPassword: "Kothrud2021"
+  userCSVPATH: "/opt/csye6225/users.csv"
   ingressRules:
     - protocol: "tcp"
       fromPort: 22
