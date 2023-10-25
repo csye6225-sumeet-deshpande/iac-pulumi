@@ -188,33 +188,8 @@ const username = "csye6225";
 const password = "Kothrud2021";
 console.log("RDS Endpoint:", rdsDatabase.address);
 
-// const userData = pulumi.all([username, password, rdsDatabase.address])
-// .apply(([username, password, address]) => 
-//     `#!/bin/bash
-//     sudo mkdir /home/admin/p2
-//     cd /home/admin/webapp
-//     rm .env
-//     touch .env
-//     echo PGPORT=5432 >> /home/admin/webapp/.env
-//     echo PGUSER=${username} >> /home/admin/webapp/.env
-//     echo PGPASSWORD=${password} >> /home/admin/webapp/.env
-//     echo PGDATABASE="${username}" >> /home/admin/webapp/.env
-//     echo CSVPATH="./users.csv" >> /home/admin/webapp/.env
-//     echo PGHOST=${address} >> /home/admin/webapp/.env
-//     echo "Hello, World!" > /home/admin/index.html`);
 
-const userData = `#!/bin/bash
-sudo mkdir /home/admin/p2
-cd /home/admin/webapp
-rm .env
-touch .env
-echo PGPORT=5432 >> /home/admin/webapp/.env
-echo PGUSER="csye6225" >> /home/admin/webapp/.env
-echo PGPASSWORD="Kothrud2021" >> /home/admin/webapp/.env
-echo PGDATABASE="csye6225" >> /home/admin/webapp/.env
-echo CSVPATH="/home/admin/webapp/users.csv" >> /home/admin/webapp/.env
-echo PGHOST=${rdsDatabase.endpoint} >> /home/admin/webapp/.env
-echo "Hello, World!" > /home/admin/index.html`;
+
 
 
 
@@ -232,17 +207,16 @@ const webAppInstance = new aws.ec2.Instance("webAppInstance", {
     disableApiTermination:false,
     userDataReplaceOnChange:true,
     userData:pulumi.interpolate`#!/bin/bash
-    sudo mkdir /home/admin/p2
-    cd /home/admin/webapp
-    rm .env
-    touch .env
-    echo PGPORT=5432 >> /home/admin/webapp/.env
-    echo PGUSER="csye6225" >> /home/admin/webapp/.env
-    echo PGPASSWORD="Kothrud2021" >> /home/admin/webapp/.env
-    echo PGDATABASE="csye6225" >> /home/admin/webapp/.env
-    echo CSVPATH="./users.csv" >> /home/admin/webapp/.env
-    echo PGHOST=${rdsDatabase.address} >> /home/admin/webapp/.env
-    echo "Hello, World!" > /home/admin/index.html`,
+    cd /opt/csye6225
+    sudo rm .env
+    sudo touch .env
+    echo PGPORT=5432 >> /opt/csye6225/.env
+    echo PGUSER="csye6225" >> /opt/csye6225/.env
+    echo PGPASSWORD="Kothrud2021" >> /opt/csye6225/.env
+    echo PGDATABASE="csye6225" >> /opt/csye6225/.env
+    echo CSVPATH="/opt/csye6225/users.csv" >> /opt/csye6225/.env
+    echo PGHOST=${rdsDatabase.address} >> /opt/csye6225/.env
+    sudo systemctl restart webapp`,
     // userData:Buffer.from(`#!/bin/bash
     // sudo mkdir /home/admin/p2
     // cd /home/admin/webapp
