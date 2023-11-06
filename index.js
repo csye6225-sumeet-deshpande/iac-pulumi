@@ -192,6 +192,28 @@ const rdsDatabase = new aws.rds.Instance("rdsdatabase",{
 })
 
 
+let role = new aws.iam.Role("role", {
+    assumeRolePolicy: JSON.stringify({
+        Version: "2012-10-17",
+        Statement: [{
+            Action: "sts:AssumeRole",
+            Principal: {
+                Service: "ec2.amazonaws.com"
+            },
+            Effect: "Allow",
+        }]
+    })
+})
+
+
+let policyAttachment = new aws.iam.RolePolicyAttachment("policyAttachment", {
+    role: role.name,
+    policyArn: "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy" 
+})
+
+let instanceProfile = new aws.iam.InstanceProfile("myInstanceProfile", {
+    role: role.name
+});
 
 
 const webAppInstance = new aws.ec2.Instance("webAppInstance", {
@@ -206,6 +228,7 @@ const webAppInstance = new aws.ec2.Instance("webAppInstance", {
         deleteOnTermination:true,
     },
     disableApiTermination:false,
+    iamInstanceProfile: instanceProfile.name,
     userDataReplaceOnChange:true,
     userData:pulumi.interpolate`#!/bin/bash
     cd /opt/csye6225
@@ -217,13 +240,32 @@ const webAppInstance = new aws.ec2.Instance("webAppInstance", {
     echo PGDATABASE=${dbName} >> /opt/csye6225/.env
     echo CSVPATH=${userCSVPATH} >> /opt/csye6225/.env
     echo PGHOST=${rdsDatabase.address} >> /opt/csye6225/.env
-    sudo systemctl restart webapp`,
+    sudo systemctl restart webapp
+    sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+    -a fetch-config \
+    -m ec2 \
+    -c file:/opt/csye6225/aws_cw_config.json \
+    -s
+    sudo systemctl enable amazon-cloudwatch-agent
+    sudo systemctl start amazon-cloudwatch-agent`,
     dependsOn: [rdsDatabase],
     tags: {
         Name: "EC2 Web APP Pulumi",
     },
 });
 
+
+const domainName = "demo.sumeetdeshpande.me"; 
+const port = "9090"; 
+
+
+const route53Record = new aws.route53.Record(`${domainName}-record`, {
+    name: domainName, 
+    type: "A",
+    zoneId: "Z07184388V6BWJ84Z45O", 
+    records: [webAppInstance.publicIp], 
+    ttl: 60, 
+});
 
 
 
@@ -234,4 +276,5 @@ const webAppInstance = new aws.ec2.Instance("webAppInstance", {
     exports.publicRouteTableId = publicRouteTable.id;
     exports.privateRouteTableId = privateRouteTable.id;
     exports.instanceId = webAppInstance.id;
+    exports.route53Record=route53Record.id;
 });

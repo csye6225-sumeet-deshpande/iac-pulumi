@@ -10,16 +10,16 @@ config:
   private_route_table: "Private Route Table"
   private_subnet: "private-subnet"
   public_subnet: "public-subnet"
-  keyName: ""
+  keyName: "demo"
   instanceType: "t2.micro"
-  ami: ""
+  ami: "ami-008ee009c4dd0042a"
   volumeSize: 25
   volumeType: "gp2"
-  rdsIdentifier: ""
+  rdsIdentifier: "csye6225"
   instanceClass: "db.t3.micro"
-  dbName: ""
-  dbUsername: ""
-  dbPassword: ""
+  dbName: "csye6225"
+  dbUsername: "csye6225"
+  dbPassword: "Kothrud2021"
   userCSVPATH: "/opt/csye6225/users.csv"
   ingressRules:
     - protocol: "tcp"
@@ -42,5 +42,3 @@ config:
       toPort: 9090
       cidrBlocks:
         - "0.0.0.0/0"
-
-
