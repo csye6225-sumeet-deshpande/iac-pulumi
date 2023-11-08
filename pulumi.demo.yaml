@@ -12,15 +12,17 @@ config:
   public_subnet: "public-subnet"
   keyName: "demo"
   instanceType: "t2.micro"
-  ami: "ami-008ee009c4dd0042a"
+  ami: ""
   volumeSize: 25
   volumeType: "gp2"
-  rdsIdentifier: "csye6225"
+  rdsIdentifier: ""
   instanceClass: "db.t3.micro"
-  dbName: "csye6225"
-  dbUsername: "csye6225"
-  dbPassword: "Kothrud2021"
-  userCSVPATH: "/opt/csye6225/users.csv"
+  dbName: ""
+  dbUsername: ""
+  dbPassword: ""
+  userCSVPATH: ""
+  zonedID: ""
+  domainName: ""
   ingressRules:
     - protocol: "tcp"
       fromPort: 22

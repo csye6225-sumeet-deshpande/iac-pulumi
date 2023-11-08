@@ -25,6 +25,8 @@ const dbName=config.require('dbName');
 const rdsIdentifier=config.require('rdsIdentifier');
 const instanceClass=config.require('instanceClass');
 const userCSVPATH=config.require('userCSVPATH');
+const zonedID=config.require('zonedID')
+const domainName=config.require('domainName')
 
 
 
@@ -255,14 +257,13 @@ const webAppInstance = new aws.ec2.Instance("webAppInstance", {
 });
 
 
-const domainName = "demo.sumeetdeshpande.me"; 
-const port = "9090"; 
+ 
 
 
 const route53Record = new aws.route53.Record(`${domainName}-record`, {
     name: domainName, 
     type: "A",
-    zoneId: "Z07184388V6BWJ84Z45O", 
+    zoneId: zonedID, 
     records: [webAppInstance.publicIp], 
     ttl: 60, 
 });
