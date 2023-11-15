@@ -350,7 +350,7 @@ tagSpecifications: [
     {
         resourceType: "instance",
         tags: {
-            Name: "asg_launch_config",
+            Name: "csye6225_asg",
         },
     },
 ],
@@ -457,7 +457,7 @@ const asg = new aws.autoscaling.Group("asg", {
     tags: [
         {
             key: "Name",
-            value: "asg_launch_config",
+            value: "csye6225_asg",
             propagateAtLaunch: true,
         },
     ],
@@ -477,7 +477,6 @@ const scaleUpPolicy = new aws.autoscaling.Policy("scaleUpPolicy", {
     scalingAdjustment: 1,
     cooldown: 60,
     adjustmentType: "ChangeInCapacity",
-    //estimatedInstanceWarmup: 60,
     autocreationCooldown: 60,
     cooldownDescription: "Scale up policy when average CPU usage is above 5%",
     policyType: "SimpleScaling",
