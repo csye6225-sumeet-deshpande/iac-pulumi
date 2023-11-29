@@ -466,13 +466,14 @@ keyFilePath.apply(path => {
 
 const apiKey=config.require('apiKey');
 const projectId=config.require('projectId');
+const serverlesspath=config.require('serverlesspath');
 
 const lambdaFunction = new aws.lambda.Function("LambdaFunction", {
     functionName: "sendemail",
     role: lambdaRole.arn,
     runtime: "nodejs18.x", 
     handler: "index.handler",
-    code:  new pulumi.asset.FileArchive("./Archive.zip"),
+    code:  new pulumi.asset.FileArchive(serverlesspath),
     environment: {
         variables: {
             gcp_name: serviceAccountKeys.name,
