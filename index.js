@@ -30,6 +30,7 @@ const instanceClass=config.require('instanceClass');
 const userCSVPATH=config.require('userCSVPATH');
 const zonedID=config.require('zonedID')
 const domainName=config.require('domainName')
+const emailId=config.require('emailId');
 
 
 
@@ -480,6 +481,7 @@ const lambdaFunction = new aws.lambda.Function("LambdaFunction", {
             dbName:db.name,
             projectId:projectId,
             apiKey:apiKey,
+            emailId:emailId,
         },
     },
 });

@@ -15,18 +15,19 @@ config:
   keyName: "sumeet"
   projectId: "zinc-anvil-406607"
   instanceType: "t2.micro"
-  ami: "ami-0b216a2728a70ac12"
+  ami: "ami-0abd76c62fe892769"
   volumeSize: 25
   volumeType: "gp2"
   rdsIdentifier: "csye6225"
   instanceClass: "db.t3.micro"
   dbName: "csye6225"
-  dbUsername: ""
+  dbUsername: "csye6225"
   dbPassword: ""
   apiKey: ""
   userCSVPATH: "/opt/csye6225/users.csv"
-  zonedID: ""
+  zonedID: "Z07184388V6BWJ84Z45O"
   domainName: "demo.sumeetdeshpande.me"
+  emailId: "no-reply@demo.sumeetdeshpande.me"
   ingressRules:
     - protocol: "tcp"
       fromPort: 22
