@@ -7,8 +7,6 @@ const config = new pulumi.Config();
 
 
 const cidrblock=config.require("cidr");
- const AWS_ACCESS_KEY_ID= config.require("qAWS_ACCESS_KEY_ID");
- const AWS_SECRET_ACCESS_KEY=config.require("qAWS_SECRET_ACCESS_KEY");
  const region=config.require("region");
 const count=config.require("total_count");
 const vpc_name=config.require("vpc_name");

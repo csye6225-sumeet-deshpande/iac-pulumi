@@ -1,6 +1,8 @@
 config:
   aws:profile: dev
   aws:region: "us-east-1"
+  gcp:project: ""
+  region: "us-east-1"
   cidr: 10.0.0.0/16
   subnetMask: 24
   total_count: 3
@@ -10,18 +12,20 @@ config:
   private_route_table: "Private Route Table"
   private_subnet: "private-subnet"
   public_subnet: "public-subnet"
-  keyName: "dev"
+  keyName: "sumeet"
+  projectId: "zinc-anvil-406607"
   instanceType: "t2.micro"
-  ami: ""
+  ami: "ami-0b216a2728a70ac12"
   volumeSize: 25
   volumeType: "gp2"
-  rdsIdentifier: ""
+  rdsIdentifier: "csye6225"
   instanceClass: "db.t3.micro"
-  dbName: ""
+  dbName: "csye6225"
   dbUsername: ""
   dbPassword: ""
+  apiKey: ""
   userCSVPATH: "/opt/csye6225/users.csv"
-  zonedID: "Z05783082L9DO4D4LOC9P"
+  zonedID: ""
   domainName: "dev.sumeetdeshpande.me"
   ingressRules:
     - protocol: "tcp"
