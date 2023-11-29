@@ -1,7 +1,7 @@
 config:
   aws:profile: demo
   aws:region: "us-east-1"
-  gcp:project: "594205198788"
+  gcp:project: ""
   region: "us-east-1"
   cidr: 10.0.0.0/16
   subnetMask: 24
@@ -22,8 +22,8 @@ config:
   instanceClass: "db.t3.micro"
   dbName: "csye6225"
   dbUsername: "csye6225"
-  dbPassword: "Kothrud2021"
-  apiKey: "daa3981b5a349c65aed0f852aab638d5-30b58138-beda55dc"
+  dbPassword: ""
+  apiKey: ""
   userCSVPATH: "/opt/csye6225/users.csv"
   serverlesspath: "./Archive.zip"
   zonedID: "Z07184388V6BWJ84Z45O"
