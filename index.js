@@ -1,11 +1,15 @@
 const pulumi = require("@pulumi/pulumi");
 const aws = require("@pulumi/aws");
+const gcp =require("@pulumi/gcp");
 const { rds } = require("@pulumi/aws/types/enums");
 const { TargetGroup } = require("@pulumi/aws/alb");
 const config = new pulumi.Config();
 
 
 const cidrblock=config.require("cidr");
+ const AWS_ACCESS_KEY_ID= config.require("qAWS_ACCESS_KEY_ID");
+ const AWS_SECRET_ACCESS_KEY=config.require("qAWS_SECRET_ACCESS_KEY");
+ const region=config.require("region");
 const count=config.require("total_count");
 const vpc_name=config.require("vpc_name");
 const ig_name=config.require("ig_name");
@@ -159,6 +163,7 @@ const ApplicationSecurityGroup = new aws.ec2.SecurityGroup("ApplicationSecurityG
             protocol: "tcp",
             fromPort: 22,
             toPort: 22,
+            cidrBlocks: ["0.0.0.0/0"],
             securityGroups: [lbSg.id],
         },
         {
@@ -257,15 +262,249 @@ assumeRolePolicy: JSON.stringify({
 })
 
 
-let policyAttachment = new aws.iam.RolePolicyAttachment("policyAttachment", {
+let policyAttachmentcloudwatch = new aws.iam.RolePolicyAttachment("policyAttachment", {
 role: role.name,
 policyArn: "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy" 
 })
+
+const lambdaFullAccessAttachment_ec2 = new aws.iam.RolePolicyAttachment("lambdaPolicy-LambdaFullAccess_ec2", {
+    role: role.name,
+    policyArn:  "arn:aws:iam::aws:policy/AWSLambda_FullAccess",
+});
+
+const dynamoDBFullAccessAttachment_ec2 = new aws.iam.RolePolicyAttachment("lambdaPolicy-DynamoDBFullAccess_ec2", {
+    role: role.name,
+    policyArn: "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess",
+});
+
 
 let instanceProfile = new aws.iam.InstanceProfile("myInstanceProfile", {
 role: role.name
 });
 
+const db = new aws.dynamodb.Table("csye-6225", {
+    name:"csye-6225",
+    attributes: [  
+        { name: "timestamp", type: "S" },  
+    ],
+    hashKey: "timestamp",
+    readCapacity: 1,
+    writeCapacity: 1,
+});
+
+
+
+const loadbalncer = new aws.lb.LoadBalancer("webAppLB", {
+    name: "csye6225-lb",
+    internal: false,
+    loadBalancerType: "application",
+    securityGroups: [lbSg.id],
+    subnets: publicSubnetIds,
+    enableDeletionProtection: false,
+    tags: {
+        Application: "WebApp",
+    },
+});
+
+const targetGroup = new aws.lb.TargetGroup("webAppTargetGroup", {
+    name: "csye6225-lb-tg",
+    port: 9090,
+    protocol: "HTTP",
+    vpcId: vpc.id,
+    targetType: "instance",
+    healthCheck: {
+        enabled: true,
+        path: "/healthz",
+        port: "traffic-port",
+        protocol: "HTTP",
+        healthyThreshold: 2,
+        unhealthyThreshold: 2,
+        timeout: 6,
+        interval: 30,
+    },
+});
+
+const listener = new aws.lb.Listener("webAppListener", {
+    loadBalancerArn: loadbalncer.arn,
+    port: "80",
+    protocol: "HTTP",
+    defaultActions: [{
+        type: "forward",
+        targetGroupArn: targetGroup.arn,
+    }],
+});
+
+
+
+
+
+
+
+
+const topic = new aws.sns.Topic("sending-email", {
+    displayName: "sending-email",
+});
+
+
+const lambdaRole = new aws.iam.Role("LambdaFunctionRole", {
+    assumeRolePolicy: JSON.stringify({
+        Version: "2012-10-17",
+        Statement: [{
+            Effect: "Allow",
+            Principal: {
+                Service: ["lambda.amazonaws.com"],
+            },
+            Action: ["sts:AssumeRole"],
+        }],
+    }),
+});
+
+
+const lambdaPolicyArns = [
+    "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess",
+    "arn:aws:iam::aws:policy/AWSLambda_FullAccess",
+    "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess",
+  
+];
+
+
+const cloudWatchLogsAttachment = new aws.iam.RolePolicyAttachment("lambdaPolicy-CloudWatchLogs", {
+    role: lambdaRole.name,
+    policyArn: lambdaPolicyArns[0],
+});
+
+
+
+const lambdaFullAccessAttachment = new aws.iam.RolePolicyAttachment("lambdaPolicy-LambdaFullAccess", {
+    role: lambdaRole.name,
+    policyArn: lambdaPolicyArns[1],
+});
+
+const dynamoDBFullAccessAttachment = new aws.iam.RolePolicyAttachment("lambdaPolicy-DynamoDBFullAccess", {
+    role: lambdaRole.name,
+    policyArn: lambdaPolicyArns[2],
+});
+
+
+const topicPolicy = new aws.iam.Policy("EC2TopicAccessPolicy", {
+    policy: {
+        Version: "2012-10-17",
+        Statement: [
+            {
+                Sid: "AllowEC2ToPublishToSNSTopic",
+                Effect: "Allow",
+                Action: ["sns:Publish", "sns:CreateTopic"],
+                Resource: topic.arn,
+            },
+        ],
+    },
+    roles: [lambdaRole],
+});
+
+const topicPolicy1 = new aws.iam.Policy("EC2TopicAccessPolic", {
+    policy: {
+        Version: "2012-10-17",
+        Statement: [
+            {
+                Sid: "AllowEC2ToPublishToSNSTopic",
+                Effect: "Allow",
+                Action: ["sns:Publish", "sns:CreateTopic"],
+                Resource: topic.arn,
+            },
+        ],
+    },
+    roles: [role],
+});
+
+const snsPublishPolicyAttachment = new aws.iam.RolePolicyAttachment("SNSPublishPolicyAttachment", {
+    role: role.name,
+    policyArn: topicPolicy1.arn,
+});
+
+// const lambdaCode = new aws.s3.BucketObject("lambda-code", {
+//     bucket: "sumeet-bucket1",
+//     key: "Archive.zip", 
+// });
+
+
+const gcsBucket = new gcp.storage.Bucket("gcsBucket", {
+    name: "csye6225_demo_sumeet_gcs_bucket",
+    forceDestroy: true,
+    location: "us",
+    versioning: {                   
+        enabled: true,
+    },
+});
+
+const serviceAccount = new gcp.serviceaccount.Account("myServiceAccount", {
+    accountId: "gcp-bucket-service-account",
+    displayName: "GCP Bucket Service Account",
+});
+
+
+
+const bucketAccess = new gcp.storage.BucketIAMBinding("bucketAccess", {
+    bucket: gcsBucket.name,
+    role: "roles/storage.objectAdmin",
+    members: [pulumi.interpolate`serviceAccount:${serviceAccount.email}`],
+});
+
+const serviceAccountKeys = new gcp.serviceaccount.Key("myServiceAccountKeys", {
+    serviceAccountId: serviceAccount.id,
+});
+console.log("@!@!@!@!@!@!@!@!@!@!@@!@@#!#",serviceAccountKeys.privateKey);
+
+const keyFilePath = pulumi.interpolate`./${serviceAccountKeys.name}.json`;
+
+const keyFileContentOutput = serviceAccountKeys.privateKeyJson;
+
+keyFilePath.apply(path => {
+    pulumi.log.info(`Key File Path: ${path}`);
+});
+
+
+
+
+const apiKey=config.require('apiKey');
+const projectId=config.require('projectId');
+
+const lambdaFunction = new aws.lambda.Function("LambdaFunction", {
+    functionName: "sendemail",
+    role: lambdaRole.arn,
+    runtime: "nodejs18.x", 
+    handler: "index.handler",
+    code:  new pulumi.asset.FileArchive("./Archive.zip"),
+    environment: {
+        variables: {
+            gcp_name: serviceAccountKeys.name,
+            gcp_pk: serviceAccountKeys.privateKey,
+            gcsBucket: gcsBucket.name,
+            dbName:db.name,
+            projectId:projectId,
+            apiKey:apiKey,
+        },
+    },
+});
+
+const snsSubscription = new aws.sns.TopicSubscription(`SNSSubscription`, {
+    topic: topic.arn,
+    protocol: "lambda",
+    endpoint: lambdaFunction.arn,
+});
+
+
+const topicPolicyAttachment = new aws.iam.PolicyAttachment("topicPolicyAttachment", {
+    policyArn: topicPolicy.arn,
+    roles: [lambdaRole.name],
+});
+
+const lambdaPermission = new aws.lambda.Permission("with_sns", {
+    statementId: "AllowExecutionFromSNS",
+    action: "lambda:InvokeFunction",
+    function: lambdaFunction.name,
+    principal: "sns.amazonaws.com",
+    sourceArn: topic.arn,
+});
 
 
 
@@ -279,6 +518,8 @@ echo PGPASSWORD=${password} >> /opt/csye6225/.env
 echo PGDATABASE=${dbName} >> /opt/csye6225/.env
 echo CSVPATH=${userCSVPATH} >> /opt/csye6225/.env
 echo PGHOST=${rdsDatabase.address} >> /opt/csye6225/.env
+echo DYNAMODB=${db.name} >> /opt/csye6225/.env
+echo topicARN=${topic.arn} >> /opt/csye6225/.env
 sudo systemctl restart webapp
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
 -a fetch-config \
@@ -289,29 +530,6 @@ sudo systemctl enable amazon-cloudwatch-agent
 sudo systemctl start amazon-cloudwatch-agent`;
 
 
-// const userDataTemplate =pulumi.interpolate`#!/bin/bash
-// cd /opt/csye6225
-// sudo rm .env
-// sudo touch .env
-// echo PGPORT=5432 >> /opt/csye6225/.env
-// echo PGUSER=${username} >> /opt/csye6225/.env
-// echo PGPASSWORD=${password} >> /opt/csye6225/.env
-// echo PGDATABASE=${dbName} >> /opt/csye6225/.env
-// echo CSVPATH=${userCSVPATH} >> /opt/csye6225/.env
-// echo PGHOST=${rdsDatabase.address} >> /opt/csye6225/.env
-// sudo systemctl restart webapp
-// sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-// -a fetch-config \
-// -m ec2 \
-// -c file:/opt/csye6225/aws_cw_config.json \
-// -s
-// sudo systemctl enable amazon-cloudwatch-agent
-// sudo systemctl start amazon-cloudwatch-agent`;
-
-// const userData = pulumi.interpolate`${pulumi.output(userDataTemplate)}`;
-// const encodedUserData = pulumi.all([userData]).apply(([userData]) => Buffer.from(userData).toString('base64'));
-
-// const encodedUserData = Buffer.from(userDataTemplate).toString("base64");
 
 
 const launchtemplate = new aws.ec2.LaunchTemplate("launchtemplate", {
@@ -358,91 +576,6 @@ tagSpecifications: [
 userData: userDataTemplate.apply((data) => Buffer.from(data).toString("base64")),
 });
 
-const loadbalncer = new aws.lb.LoadBalancer("webAppLB", {
-    name: "csye6225-lb",
-    internal: false,
-    loadBalancerType: "application",
-    securityGroups: [lbSg.id],
-    subnets: publicSubnetIds,
-    enableDeletionProtection: false,
-    tags: {
-        Application: "WebApp",
-    },
-});
-
-const targetGroup = new aws.lb.TargetGroup("webAppTargetGroup", {
-    name: "csye6225-lb-tg",
-    port: 9090,
-    protocol: "HTTP",
-    vpcId: vpc.id,
-    targetType: "instance",
-    healthCheck: {
-        enabled: true,
-        path: "/healthz",
-        port: "traffic-port",
-        protocol: "HTTP",
-        healthyThreshold: 2,
-        unhealthyThreshold: 2,
-        timeout: 6,
-        interval: 30,
-    },
-});
-
-const listener = new aws.lb.Listener("webAppListener", {
-    loadBalancerArn: loadbalncer.arn,
-    port: "80",
-    protocol: "HTTP",
-    defaultActions: [{
-        type: "forward",
-        targetGroupArn: targetGroup.arn,
-    }],
-});
-
-
-
-
-// const webAppInstance = new aws.ec2.Instance("webAppInstance", {
-//     ami: ami,  
-//     instanceType: instanceType, 
-//     subnetId: publicSubnetIds[0],  
-//     securityGroups: [ApplicationSecurityGroup.id],
-//     keyName: keyName,
-//     rootBlockDevice: {
-//         volumeSize: volumeSize,  
-//         volumeType: volumeType, 
-//         deleteOnTermination:true,
-//     },
-//     disableApiTermination:false,
-//     iamInstanceProfile: instanceProfile.name,
-//     userDataReplaceOnChange:true,
-//     userData:pulumi.interpolate`#!/bin/bash
-//     cd /opt/csye6225
-//     sudo rm .env
-//     sudo touch .env
-//     echo PGPORT=5432 >> /opt/csye6225/.env
-//     echo PGUSER=${username} >> /opt/csye6225/.env
-//     echo PGPASSWORD=${password} >> /opt/csye6225/.env
-//     echo PGDATABASE=${dbName} >> /opt/csye6225/.env
-//     echo CSVPATH=${userCSVPATH} >> /opt/csye6225/.env
-//     echo PGHOST=${rdsDatabase.address} >> /opt/csye6225/.env
-//     sudo systemctl restart webapp
-//     sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-//     -a fetch-config \
-//     -m ec2 \
-//     -c file:/opt/csye6225/aws_cw_config.json \
-//     -s
-//     sudo systemctl enable amazon-cloudwatch-agent
-//     sudo systemctl start amazon-cloudwatch-agent`,
-//     dependsOn: [rdsDatabase],
-//     tags: {
-//         Name: "EC2 Web APP Pulumi",
-//     },
-// });
-
-
-
-
- 
 
 const asg = new aws.autoscaling.Group("asg", {
     name: "asg_launch_config",
@@ -532,6 +665,8 @@ const route53Record = new aws.route53.Record(`${domainName}-record`, {
     }], 
    
 });
+
+
 
 
 
