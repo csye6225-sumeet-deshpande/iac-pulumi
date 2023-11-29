@@ -1,7 +1,7 @@
 config:
   aws:profile: demo
   aws:region: "us-east-1"
-  gcp:project: ""
+  gcp:project: "594205198788"
   region: "us-east-1"
   cidr: 10.0.0.0/16
   subnetMask: 24
@@ -15,16 +15,17 @@ config:
   keyName: "sumeet"
   projectId: "zinc-anvil-406607"
   instanceType: "t2.micro"
-  ami: "ami-0abd76c62fe892769"
+  ami: "ami-00a50ae9db5d75afa"
   volumeSize: 25
   volumeType: "gp2"
   rdsIdentifier: "csye6225"
   instanceClass: "db.t3.micro"
   dbName: "csye6225"
   dbUsername: "csye6225"
-  dbPassword: ""
-  apiKey: ""
+  dbPassword: "Kothrud2021"
+  apiKey: "daa3981b5a349c65aed0f852aab638d5-30b58138-beda55dc"
   userCSVPATH: "/opt/csye6225/users.csv"
+  serverlesspath: "./Archive.zip"
   zonedID: "Z07184388V6BWJ84Z45O"
   domainName: "demo.sumeetdeshpande.me"
   emailId: "no-reply@demo.sumeetdeshpande.me"
