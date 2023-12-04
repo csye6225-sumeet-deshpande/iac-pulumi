@@ -61,3 +61,6 @@ This repo contains code for Infra as a part of csye6225
     pulumi up
     ```
 
+### Added certificate 
+
+- aws acm import-certificate --certificate file://Certificate.pem --certificate-chain file://CertificateChain.pem --private-key file://PrivateKey.pem --profile demo
