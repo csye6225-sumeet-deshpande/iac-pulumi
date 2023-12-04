@@ -31,6 +31,7 @@ const userCSVPATH=config.require('userCSVPATH');
 const zonedID=config.require('zonedID')
 const domainName=config.require('domainName')
 const emailId=config.require('emailId');
+const cert_arn=config.require("certificateArn");
 
 
 
@@ -303,6 +304,8 @@ const loadbalncer = new aws.lb.LoadBalancer("webAppLB", {
     tags: {
         Application: "WebApp",
     },
+    sslPolicy: "ELBSecurityPolicy-2016-08",
+    enableHttp2: true,
 });
 
 const targetGroup = new aws.lb.TargetGroup("webAppTargetGroup", {
@@ -323,10 +326,14 @@ const targetGroup = new aws.lb.TargetGroup("webAppTargetGroup", {
     },
 });
 
+
+
 const listener = new aws.lb.Listener("webAppListener", {
     loadBalancerArn: loadbalncer.arn,
-    port: "80",
-    protocol: "HTTP",
+    port: 443,
+    protocol: "HTTPS",
+    sslPolicy: "ELBSecurityPolicy-2016-08",
+    certificateArn: cert_arn,
     defaultActions: [{
         type: "forward",
         targetGroupArn: targetGroup.arn,

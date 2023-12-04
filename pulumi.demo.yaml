@@ -29,6 +29,7 @@ config:
   zonedID: "Z07184388V6BWJ84Z45O"
   domainName: "demo.sumeetdeshpande.me"
   emailId: "no-reply@demo.sumeetdeshpande.me"
+  certificateArn: ""
   ingressRules:
     - protocol: "tcp"
       fromPort: 22
